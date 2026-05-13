@@ -1,24 +1,32 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Drawer } from "expo-router/drawer";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Drawer screenOptions={{ headerShown: true }}>
+        <Drawer.Screen 
+          name="index" 
+          options={{ 
+            drawerLabel: "Mi Perfil", 
+            title: "Portafolio Personal" 
+          }} 
+        />
+        <Drawer.Screen 
+          name="(tabs)" 
+          options={{ 
+            drawerLabel: "Detalles", 
+            title: "Mi Perfil",
+          }} 
+        />
+        <Drawer.Screen 
+          name="contact" 
+          options={{ 
+            drawerLabel: "Contacto", 
+            title: "Contacto" 
+          }} 
+        />
+      </Drawer>
+    </GestureHandlerRootView>
   );
 }
