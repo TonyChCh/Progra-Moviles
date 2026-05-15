@@ -5,6 +5,6 @@ export default function ProjectsStack() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="[id]" options={{ headerShown: true, title: 'Detalle' }} />
-    </Stack>
+    </Stack> 
   );
 }

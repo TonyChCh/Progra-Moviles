@@ -4,7 +4,6 @@ import { useLocalSearchParams } from 'expo-router';
 export default function ProjectDetail() {
   const { id } = useLocalSearchParams();
   
-  // Diccionario simple para mostrar contenido según ID
   const details: any = {
     '1': { name: 'Tienda Online', tech: 'HTML5, CSS3, JavaScript' },
     '2': { name: 'Sistema Biblioteca', tech: 'Java, MySQL' },

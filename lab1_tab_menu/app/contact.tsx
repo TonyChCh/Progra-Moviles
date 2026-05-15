@@ -13,7 +13,7 @@ export default function ContactScreen() {
         <Text style={styles.link}>GitHub</Text>
         <Text style={styles.link}>WhatsApp</Text>
       </View>
-    </View>
+    </View> 
   );
 }
 

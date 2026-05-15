@@ -21,7 +21,7 @@ export default function AboutScreen() {
           </View>
         ))}
       </View>
-    </ScrollView>
+    </ScrollView> 
   );
 }
 

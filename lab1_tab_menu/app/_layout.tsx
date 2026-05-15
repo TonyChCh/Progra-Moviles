@@ -1,12 +1,10 @@
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from "expo-router/drawer";
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Drawer screenOptions={{ headerShown: true }}>
+      <Drawer screenOptions={{ headerShown: true}} initialRouteName="profile">
         <Drawer.Screen 
-          name="index" 
+          name="profile" 
           options={{ 
             drawerLabel: "Mi Perfil", 
             title: "Portafolio Personal" 
@@ -27,6 +25,5 @@ export default function RootLayout() {
           }} 
         />
       </Drawer>
-    </GestureHandlerRootView>
   );
 }
