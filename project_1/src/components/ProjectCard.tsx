@@ -24,6 +24,6 @@ export default function ProjectCard({ project }: Props) {
 const styles = StyleSheet.create({
   card: { backgroundColor: 'white', padding: 20, borderRadius: 10, marginBottom: 15, elevation: 4 },
   cardTitle: { fontSize: 18, fontWeight: 'bold' },
-  cardDesc: { color: '#666', marginVertical: 5 },
+  cardDesc: {  fontSize: 16, color: '#666', marginVertical: 5 },
   more: { color: '#007bff', fontWeight: 'bold', marginTop: 5 }
 });

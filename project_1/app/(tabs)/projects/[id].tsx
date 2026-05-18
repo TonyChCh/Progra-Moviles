@@ -23,6 +23,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: 'bold', color: '#333' },
   subtitle: { fontSize: 14, color: '#999', marginBottom: 20 },
   content: { width: '100%', backgroundColor: '#fff', padding: 20, borderRadius: 10 },
-  label: { fontWeight: 'bold', marginBottom: 5 },
-  tech: { fontSize: 16, color: '#007bff' }
+  label: { fontWeight: 'bold', fontSize: 20, marginBottom: 5 },
+  tech: { fontSize: 18, color: '#007bff' }
 });

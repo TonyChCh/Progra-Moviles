@@ -14,7 +14,7 @@ export default function RootLayout() {
         name="(tabs)" 
         options={{ 
           drawerLabel: "Detalles", 
-          title: "Mi Perfil",
+          title: "Detalles",
         }} 
       />
       <Drawer.Screen 

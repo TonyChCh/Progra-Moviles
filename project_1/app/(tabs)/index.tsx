@@ -14,8 +14,9 @@ export default function AboutScreen() {
       <Text style={styles.subtitle}>Habilidades</Text>
       <View style={styles.skillsGrid}>
         {MY_SKILLS.map((skill) => (
-          <View key={skill} style={styles.skillBadge}>
-            <Text style={styles.skillText}>{skill}</Text>
+          <View key={skill.name} style={styles.skillBadge}>
+            <Text style={styles.skillText}>{skill.name}</Text>
+            <Text style={styles.skillLevel}>{skill.level}</Text>
           </View>
         ))}
       </View>
@@ -30,5 +31,6 @@ const styles = StyleSheet.create({
   text: { fontSize: 19, color: '#666', lineHeight: 24 },
   skillsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   skillBadge: { backgroundColor: '#e9ecef', padding: 10, borderRadius: 5, minWidth: '48%' },
-  skillText: { textAlign: 'center', fontWeight: '500' }
+  skillText: { textAlign: 'center', fontSize: 20, fontWeight: '500' },
+  skillLevel: { textAlign: 'center', fontSize: 17, color: '#999' }
 });
