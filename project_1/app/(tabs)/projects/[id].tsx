@@ -1,16 +1,10 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { useProject } from '../../../src/hooks/useProject';
 
 export default function ProjectDetail() {
   const { id } = useLocalSearchParams();
-  
-  const details: any = {
-    '1': { name: 'Tienda Online', tech: 'HTML5, CSS3, JavaScript' },
-    '2': { name: 'Sistema Biblioteca', tech: 'Java, MySQL' },
-    '3': { name: 'Blog Personal', tech: 'React Native, Expo' },
-  };
-
-  const project = details[id as string] || { name: 'Proyecto', tech: 'N/A' };
+  const project = useProject(id as string); 
 
   return (
     <View style={styles.container}>
