@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
@@ -6,7 +6,11 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.hero}>
+      <ImageBackground
+        source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVA_HrQLjkHiJ2Ag5RGuwbFeDKRLfldnDasw&s' }}
+        style={styles.hero}
+        imageStyle={styles.heroImage}
+      >
         <Text style={styles.title}>Hola, soy{"\n"}Tony Chang{"\n"}</Text>
         <Text style={styles.subtitle}>Desarrollador Web & Diseñador</Text>
         <Pressable
@@ -15,7 +19,7 @@ export default function ProfileScreen() {
         >
           <Text style={styles.contactButtonText}>Contáctame</Text>
         </Pressable>
-      </View>
+      </ImageBackground>
       <View>
         <Text style={styles.description}>
           Bienvenido a mi portafolio digital, donde comparto mis proyectos y habilidades en desarrollo de software y aplicaciones.{"\n"}
@@ -36,6 +40,15 @@ const styles = StyleSheet.create({
     minHeight: 400,
     justifyContent: 'center'
   },
+  heroImage: {
+    width: '80%',
+    height: '80%',
+    resizeMode: 'contain',
+    borderRadius: 12,
+    top: 20,
+    opacity: 0.12,
+  },
+
   title: { fontSize: 32, fontWeight: '700', color: 'white', textAlign: 'center' },
   subtitle: { fontSize: 18, color: 'rgba(255,255,255,0.9)', textAlign: 'center', marginTop: 10, fontWeight: '700' },
   description: {
@@ -59,5 +72,5 @@ const styles = StyleSheet.create({
     color: '#667eea',
     fontSize: 16,
     fontWeight: '600',
-  }  
+  }
 });

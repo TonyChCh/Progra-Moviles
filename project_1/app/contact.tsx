@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { View, Text, StyleSheet } from 'react-native';
 
 export default function ContactScreen() {
@@ -9,9 +10,19 @@ export default function ContactScreen() {
         <Text style={styles.info}>📱 +506 1234 5678</Text>
       </View>
       <View style={styles.socials}>
-        <Text style={styles.link}>LinkedIn</Text>
-        <Text style={styles.link}>GitHub</Text>
-        <Text style={styles.link}>WhatsApp</Text>
+        {/* <Text style={styles.link}>LinkedIn</Text> */}
+        <Link href="https://www.linkedin.com/in/chien-chen-chang-liu-881609259" 
+          style={styles.link} 
+          target="_blank" rel="noopener noreferrer">LinkedIn
+        </Link>
+        <Link href="https://github.com/TonyChCh/Progra-Moviles.git" 
+          style={styles.link} 
+          target="_blank" rel="noopener noreferrer">GitHub
+        </Link>
+        <Link href="https://wa.me/" 
+          style={styles.link} 
+          target="_blank" rel="noopener noreferrer">WhatsApp
+        </Link>
       </View>
     </View> 
   );
