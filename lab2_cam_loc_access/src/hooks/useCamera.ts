@@ -14,7 +14,10 @@ export function useAppCamera() {
 
   // TAKE PICTURE
   const takePicture = async () => {
-    if (!cameraRef.current) return null;
+    if (!cameraRef.current) {
+      console.warn("Referencia de cámara no disponible.");
+      return null;
+    }
 
     const status = await requestPermission();
     if (!status.granted) {
@@ -42,7 +45,8 @@ export function useAppCamera() {
     facing,
     cameraRef,
     photoUri,
-    hasCameraPermission: permission?.granted ?? null,
+    requestPermission,
+    hasPermission: permission?.granted ?? null,
     toggleCameraFacing,
     takePicture,
     resetPhoto

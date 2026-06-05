@@ -3,7 +3,8 @@ import {
     useForegroundPermissions, 
     getCurrentPositionAsync,
     LocationAccuracy,
-    reverseGeocodeAsync 
+    reverseGeocodeAsync, 
+    getLastKnownPositionAsync
 } from "expo-location";
 import { useState } from "react";
 
@@ -34,9 +35,13 @@ export function useLocation () {
     try {
       setIsLoading(true);
 
-      const currentLocation = await getCurrentPositionAsync({
-        accuracy: LocationAccuracy.Balanced, 
-      });
+      let currentLocation = await getLastKnownPositionAsync({});
+
+      if (!currentLocation) {
+        currentLocation = await getCurrentPositionAsync({
+          accuracy: LocationAccuracy.Balanced,
+        });
+      }
       setLastLocation(currentLocation);
 
       locationInfo.coords = currentLocation.coords;
@@ -64,7 +69,8 @@ export function useLocation () {
   return {
     lastLocation,
     isLoading,
-    hasLocationPermission: permission?.granted ?? null,
+    requestPermission,
+    hasPermission: permission?.granted ?? null,
     getLocation
   };
 };
