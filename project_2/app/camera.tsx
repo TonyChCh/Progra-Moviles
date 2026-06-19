@@ -1,21 +1,37 @@
 import React, { useState } from 'react';
-import { View, Button, Modal, Text, StyleSheet } from 'react-native';
+import { View, Button, Modal, Text, StyleSheet, Platform, Linking} from 'react-native';
 import { CameraView } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useAppCamera } from '../src/hooks/useCamera';
 import { useLocation } from '../src/hooks/useLocation';
 import { useBitacora } from '../src/contexts/BitacoraContext';
 import { SOUND_EFFECTS } from '../src/constants/data';
+import { pickAsset } from '../src/utils/assetPicker';
+import {useAppPermissions} from '../src/hooks/usePermissions';
 
 export default function CameraScreen() {
   const camera = useAppCamera();
   const location = useLocation();
   const { addEntry } = useBitacora();
   const router = useRouter();
+  const permissions = useAppPermissions(['camera', 'location']);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [tempPhotoUri, setTempPhotoUri] = useState<string | null>(null);
   const [tempLocation, setTempLocation] = useState("Buscando ubicación...");
+
+  const handleRequestPermissions = async () => {
+    if (!permissions.canAskAgain) {
+      // If we can't ask again, direct the user to the app settings to manually enable permissions
+      if (Platform.OS === 'ios') {
+        Linking.openURL('app-settings:');
+      } else {
+        Linking.openSettings();
+      }
+      return;
+    }
+    await permissions.requestAll();
+  };
 
   const handleTakePicture = async () => {
     // Take picture with camera
@@ -43,25 +59,20 @@ export default function CameraScreen() {
     router.push('/');
   };
 
-  const handleRequestAllPermissions = async () => {
-    await camera.requestPermission();
-    await location.requestPermission(); 
-  };
-
-  const hasAllPermissions = camera.hasPermission && location.hasPermission;
-
   // Show permissions request screen if we don't have all permissions yet
-  if (!hasAllPermissions) {
+  if (!permissions.isAllGranted) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text style={{ textAlign: 'center', marginBottom: 10, fontSize: 18, fontWeight: 'bold' }}>
-          Configuración del Laboratorio
-        </Text>
+        <Text style={{ textAlign: 'center', marginBottom: 10, fontSize: 18, fontWeight: 'bold' }}>Configuración del Permisos</Text>
         <Text style={{ textAlign: 'center', marginBottom: 20, color: '#555' }}>
-          Para poder tomar fotos y registrar automáticamente su ubicación en la bitácora, necesitamos que concedas los siguientes accesos:
+          {!permissions.canAskAgain 
+            ? "El acceso ha sido denegado permanentemente por el sistema. Es necesario autorizarlo manualmente desde los ajustes."
+            : "Para construir la bitácora automatizada, necesitamos que concedas los siguientes accesos"}
         </Text>
-        
-        <Button title="Conceder Permisos Necesarios" onPress={handleRequestAllPermissions} />
+        <Button 
+          title={!permissions.canAskAgain ? "Abrir Ajustes del Teléfono" : "Conceder Permisos Necesarios"} 
+          onPress={handleRequestPermissions} 
+        />
       </View>
     );
   }
@@ -100,7 +111,7 @@ export default function CameraScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   camera: { flex: 1, justifyContent: 'flex-end' },
-  buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', padding: 20, backgroundColor: 'rgba(0,0,0,0.5)' },
+  buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', paddingBottom: 50, padding: 20, backgroundColor: 'rgba(0,0,0,0.5)', },
   modalOverlay: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)' },
   modalBox: { backgroundColor: 'white', margin: 20, padding: 20, borderRadius: 10 }
 });

@@ -1,6 +1,5 @@
 import { 
     LocationObject, 
-    useForegroundPermissions, 
     getCurrentPositionAsync,
     LocationAccuracy,
     reverseGeocodeAsync, 
@@ -17,15 +16,8 @@ interface AppLocationResult {
 export function useLocation () {
   const [lastLocation, setLastLocation] = useState<LocationObject | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [permission, requestPermission] = useForegroundPermissions();
 
   const getLocation = async () => {
-    const status = await requestPermission();
-    if (!status.granted) {
-      console.warn("Permiso de ubicación denegado.");
-      return null; 
-    }
-
     let locationInfo: AppLocationResult = {
       coords: null,
       timestamp: null,
@@ -69,8 +61,6 @@ export function useLocation () {
   return {
     lastLocation,
     isLoading,
-    requestPermission,
-    hasPermission: permission?.granted ?? null,
     getLocation
   };
 };
