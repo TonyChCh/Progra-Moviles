@@ -100,7 +100,7 @@ export default function CameraScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   camera: { flex: 1, justifyContent: 'flex-end' },
-  buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', paddingBottom: 50, padding: 20, backgroundColor: 'rgba(0,0,0,0.5)', },
+  buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', padding: 20, backgroundColor: 'rgba(0,0,0,0.5)' },
   modalOverlay: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)' },
   modalBox: { backgroundColor: 'white', margin: 20, padding: 20, borderRadius: 10 }
 });
