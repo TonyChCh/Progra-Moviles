@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Button, Modal, Text, StyleSheet, Platform, Linking} from 'react-native';
+import { View, Button, Text, StyleSheet, Platform, Linking } from 'react-native';
 import { CameraView } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useAppCamera } from '../src/hooks/useCamera';
 import { useLocation } from '../src/hooks/useLocation';
 import { useBitacora } from '../src/contexts/BitacoraContext';
-import { SOUND_EFFECTS } from '../src/constants/data';
-import { pickAsset } from '../src/utils/assetPicker';
-import {useAppPermissions} from '../src/hooks/usePermissions';
+import { useAppPermissions } from '../src/hooks/usePermissions';
+import { useAssetSelectionModal } from '../src/hooks/useAssetSelectionModal';
+import { AssetSelectionModal } from '../src/components/AssetSelectionModal';
+import {pickAsset} from '../src/utils/assetPicker';
 
 export default function CameraScreen() {
   const camera = useAppCamera();
@@ -15,9 +16,8 @@ export default function CameraScreen() {
   const { addEntry } = useBitacora();
   const router = useRouter();
   const permissions = useAppPermissions(['camera', 'location']);
+  const assetModal = useAssetSelectionModal();
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [tempPhotoUri, setTempPhotoUri] = useState<string | null>(null);
   const [tempLocation, setTempLocation] = useState("Buscando ubicación...");
 
   const handleRequestPermissions = async () => {
@@ -34,28 +34,24 @@ export default function CameraScreen() {
   };
 
   const handleTakePicture = async () => {
-    // Take picture with camera
     const uri = await camera.takePicture();
     if (!uri) return;
-    
-    setTempPhotoUri(uri);
-    setModalVisible(true);
+
     // Get location after taking picture
     const locData = await location.getLocation();
     setTempLocation(locData ? locData.readableLocation : "Ubicación desconocida");
+
+    // Open the asset selection modal with the captured image
+    assetModal.setImageUri(uri);
   };
 
-  // Save entry to bitácora with selected audio
-  const handleSave = (selectedAudioKey: string) => {
-    if (tempPhotoUri) {
-      addEntry({
-        id: Date.now().toString(),
-        uri: tempPhotoUri,
-        location: tempLocation,
-        audioKey: selectedAudioKey
-      });
-    }
-    setModalVisible(false);
+  const handleSaveAssets = async (imageUri: string, audioKey: string) => {
+    addEntry({
+      id: Date.now().toString(),
+      uri: imageUri,
+      location: tempLocation,
+      audioKey: audioKey
+    });
     router.push('/');
   };
 
@@ -65,13 +61,13 @@ export default function CameraScreen() {
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
         <Text style={{ textAlign: 'center', marginBottom: 10, fontSize: 18, fontWeight: 'bold' }}>Configuración del Permisos</Text>
         <Text style={{ textAlign: 'center', marginBottom: 20, color: '#555' }}>
-          {!permissions.canAskAgain 
+          {!permissions.canAskAgain
             ? "El acceso ha sido denegado permanentemente por el sistema. Es necesario autorizarlo manualmente desde los ajustes."
             : "Para construir la bitácora automatizada, necesitamos que concedas los siguientes accesos"}
         </Text>
-        <Button 
-          title={!permissions.canAskAgain ? "Abrir Ajustes del Teléfono" : "Conceder Permisos Necesarios"} 
-          onPress={handleRequestPermissions} 
+        <Button
+          title={!permissions.canAskAgain ? "Abrir Ajustes del Teléfono" : "Conceder Permisos Necesarios"}
+          onPress={handleRequestPermissions}
         />
       </View>
     );
@@ -80,30 +76,20 @@ export default function CameraScreen() {
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} facing={camera.facing} ref={camera.cameraRef}>
+        <View style={styles.topRightButton}>
+          <Button title="+ Seleccionar" onPress={assetModal.open} />
+        </View>
         <View style={styles.buttonContainer}>
           <Button title="Voltear" onPress={camera.toggleCameraFacing} />
           <Button title="Capturar" onPress={handleTakePicture} />
         </View>
       </CameraView>
 
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text>Ubicación actual: {tempLocation}</Text>
-            <Text style={{ marginTop: 10, fontWeight: 'bold' }}>Elige un audio:</Text>
-            
-            {Object.entries(SOUND_EFFECTS).map(([key, value]) => (
-              <Button 
-                key={key} 
-                title={value.title}
-                onPress={() => handleSave(key)} 
-              />
-            ))}
-            
-            <Button title="Descartar" color="red" onPress={() => setModalVisible(false)} />
-          </View>
-        </View>
-      </Modal>
+      <AssetSelectionModal
+        modal={assetModal}
+        onSave={handleSaveAssets}
+        onDismiss={() => assetModal.reset()}
+      />
     </View>
   );
 }
@@ -111,7 +97,6 @@ export default function CameraScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   camera: { flex: 1, justifyContent: 'flex-end' },
+  topRightButton: { position: 'absolute', top: 20, right: 20 },
   buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', paddingBottom: 50, padding: 20, backgroundColor: 'rgba(0,0,0,0.5)', },
-  modalOverlay: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)' },
-  modalBox: { backgroundColor: 'white', margin: 20, padding: 20, borderRadius: 10 }
 });
