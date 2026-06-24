@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { fetchAllEntries, insertEntry } from '../../db/bitacoraRepository';
 
 export interface BitacoraEntry {
   id: string;
@@ -16,9 +17,21 @@ const BitacoraContext = createContext<BitacoraContextType | undefined>(undefined
 
 export function BitacoraProvider({ children }: { children: React.ReactNode }) {
   const [entries, setEntries] = useState<BitacoraEntry[]>([]);
-  
+
+  useEffect(() => {
+    fetchAllEntries()
+      .then(setEntries)
+      .catch((err) => console.error('Error cargando entradas:', err));
+  }, []);
+
   const addEntry = (entry: BitacoraEntry) => {
-    setEntries(prev => [entry, ...prev]);
+    void insertEntry({
+      uri: entry.uri,
+      location: entry.location,
+      audioKey: entry.audioKey,
+    })
+      .then((created) => setEntries((prev) => [created, ...prev]))
+      .catch((err) => console.error('Error guardando entrada:', err));
   };
 
   return (
