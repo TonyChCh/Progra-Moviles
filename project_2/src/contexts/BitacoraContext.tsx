@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { fetchAllEntries, insertEntry } from '../../db/bitacoraRepository';
+import { fetchAllEntries, insertEntry, deleteEntry as deleteEntryFromDb } from '../../db/bitacoraRepository';
 
 export interface BitacoraEntry {
   id: string;
@@ -11,6 +11,7 @@ export interface BitacoraEntry {
 interface BitacoraContextType {
   entries: BitacoraEntry[];
   addEntry: (entry: BitacoraEntry) => void;
+  deleteEntry: (id: string) => Promise<void>;
 }
 
 const BitacoraContext = createContext<BitacoraContextType | undefined>(undefined);
@@ -34,8 +35,18 @@ export function BitacoraProvider({ children }: { children: React.ReactNode }) {
       .catch((err) => console.error('Error guardando entrada:', err));
   };
 
+  const deleteEntry = async (id: string) => {
+    try {
+      await deleteEntryFromDb(id);
+      setEntries((prev) => prev.filter((entry) => entry.id !== id));
+    } catch (err) {
+      console.error('Error eliminando entrada:', err);
+      throw err;
+    }
+  };
+
   return (
-    <BitacoraContext.Provider value={{ entries, addEntry }}>
+    <BitacoraContext.Provider value={{ entries, addEntry, deleteEntry }}>
       {children}
     </BitacoraContext.Provider>
   );

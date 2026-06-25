@@ -1,4 +1,4 @@
-import { Drawer } from 'expo-router/drawer';
+import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BitacoraProvider } from '../src/contexts/BitacoraContext';
 import React, { useEffect, useState } from 'react';
@@ -26,20 +26,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BitacoraProvider>
-        <Drawer>
-          <Drawer.Screen 
-            name="camera" 
-            options={{ title: 'Tomar Foto' }} 
+        <Stack>
+          <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="photoDetail/[id]"
+            options={{ title: 'Detalle', headerBackTitle: 'Bodega' }}
           />
-          <Drawer.Screen 
-            name="index" 
-            options={{ title: 'Bodega de Fotos' }} 
-          />
-          <Drawer.Screen 
-            name="photoDetail/[id]" 
-            options={{ drawerItemStyle: { display: 'none' }, title: 'Detalle' }} 
-          />
-        </Drawer>
+        </Stack>
       </BitacoraProvider>
     </GestureHandlerRootView>
   );

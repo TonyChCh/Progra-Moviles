@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Audio, AVPlaybackStatus } from "expo-av";
-import { SOUND_EFFECTS } from '../constants/data';
+import { resolveAudioUri } from '../utils/audioResolver';
 
 export function useAppAudio() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -9,8 +9,11 @@ export function useAppAudio() {
 
 
   // PLAY NEW SOUND
-  const playNew = async (id: string) => {
+  const playNew = async (audioKey: string) => {
     if (isLoading) return;
+
+    const uri = resolveAudioUri(audioKey);
+    if (!uri) return;
 
     try {
       setIsLoading(true);
@@ -18,7 +21,7 @@ export function useAppAudio() {
       await stopAudio();
 
       const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: SOUND_EFFECTS[id].uri },
+        { uri },
         { shouldPlay: true }
       );
 

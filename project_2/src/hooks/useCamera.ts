@@ -5,26 +5,29 @@ export function useAppCamera() {
   const [facing, setFacing] = useState<"back" | "front">("back");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
+  const isCapturingRef = useRef(false);
 
-  // TOGGLE CAMERA FACING
   const toggleCameraFacing = () => {
+    if (isCapturingRef.current) return;
     setFacing((current) => (current === "back" ? "front" : "back"));
   };
 
-  // TAKE PICTURE
   const takePicture = async () => {
-    if (!cameraRef.current) return null;
+    if (isCapturingRef.current || !cameraRef.current) return null;
 
+    isCapturingRef.current = true;
     try {
       const photo = await cameraRef.current.takePictureAsync();
 
-      if (photo && photo.uri) {
+      if (photo?.uri) {
         setPhotoUri(photo.uri);
-        return photo.uri; 
+        return photo.uri;
       }
     } catch (error) {
       console.error("Error al capturar la fotografía", error);
-    } 
+    } finally {
+      isCapturingRef.current = false;
+    }
     return null;
   };
 

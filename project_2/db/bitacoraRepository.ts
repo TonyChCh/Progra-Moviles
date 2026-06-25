@@ -33,16 +33,23 @@ export async function insertEntry(
       .values({ uri: data.uri })
       .returning();
 
-    const [audioRow] = await tx
-      .insert(audio)
-      .values({ uri: data.audioKey })
-      .returning();
+    let audioId: number | null = null;
+    let audioKey = "";
+
+    if (data.audioKey) {
+      const [audioRow] = await tx
+        .insert(audio)
+        .values({ uri: data.audioKey })
+        .returning();
+      audioId = audioRow.id;
+      audioKey = audioRow.uri;
+    }
 
     const [bitacoraRow] = await tx
       .insert(bitacora)
       .values({
         imageId: imageRow.id,
-        audioId: audioRow.id,
+        audioId,
         location: data.location,
       })
       .returning();
@@ -51,7 +58,26 @@ export async function insertEntry(
       id: bitacoraRow.id.toString(),
       uri: imageRow.uri,
       location: bitacoraRow.location,
-      audioKey: audioRow.uri,
+      audioKey,
     };
+  });
+}
+
+export async function deleteEntry(id: string): Promise<void> {
+  const entryId = Number(id);
+
+  await db.transaction(async (tx) => {
+    const [row] = await tx
+      .select({ imageId: bitacora.imageId, audioId: bitacora.audioId })
+      .from(bitacora)
+      .where(eq(bitacora.id, entryId));
+
+    if (!row) return;
+
+    await tx.delete(bitacora).where(eq(bitacora.id, entryId));
+    await tx.delete(image).where(eq(image.id, row.imageId));
+    if (row.audioId != null) {
+      await tx.delete(audio).where(eq(audio.id, row.audioId));
+    }
   });
 }
