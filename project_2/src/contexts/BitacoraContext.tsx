@@ -6,6 +6,8 @@ export interface BitacoraEntry {
   uri: string;
   location: string;
   audioKey: string;
+  weatherCode: number | null;
+  temperature: number | null;
 }
 
 interface BitacoraContextType {
@@ -30,6 +32,8 @@ export function BitacoraProvider({ children }: { children: React.ReactNode }) {
       uri: entry.uri,
       location: entry.location,
       audioKey: entry.audioKey,
+      weatherCode: entry.weatherCode,
+      temperature: entry.temperature,
     })
       .then((created) => setEntries((prev) => [created, ...prev]))
       .catch((err) => console.error('Error guardando entrada:', err));

@@ -15,6 +15,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useBitacora, BitacoraEntry } from '../../src/contexts/BitacoraContext';
 import { useAppAudio } from '../../src/hooks/useAudio';
+import { WeatherInfo } from '../../src/components/WeatherInfo';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -144,6 +145,12 @@ export default function DetailScreen() {
 
       <View style={styles.locationBar}>
         <Text style={styles.locationText}>{currentEntry.location}</Text>
+        <WeatherInfo
+          entry={currentEntry}
+          iconSize={18}
+          textStyle={styles.weatherText}
+          style={styles.weatherRow}
+        />
       </View>
     </View>
   );
@@ -155,6 +162,8 @@ const styles = StyleSheet.create({
   fullImage: { flex: 1, resizeMode: 'contain' },
   locationBar: { padding: 20, backgroundColor: '#222' },
   locationText: { color: 'white', textAlign: 'center', fontSize: 18 },
+  weatherRow: { justifyContent: 'center', marginTop: 8 },
+  weatherText: { color: '#ddd', fontSize: 14 },
   notFound: { flex: 1, textAlign: 'center', marginTop: 50, fontSize: 16 },
   headerButton: {
     marginHorizontal: 8,

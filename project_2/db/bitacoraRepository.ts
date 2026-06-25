@@ -10,6 +10,8 @@ export async function fetchAllEntries(): Promise<BitacoraEntry[]> {
       location: bitacora.location,
       imageUri: image.uri,
       audioUri: audio.uri,
+      weatherCode: bitacora.weatherCode,
+      temperature: bitacora.temperature,
     })
     .from(bitacora)
     .innerJoin(image, eq(bitacora.imageId, image.id))
@@ -21,6 +23,8 @@ export async function fetchAllEntries(): Promise<BitacoraEntry[]> {
     uri: row.imageUri,
     location: row.location,
     audioKey: row.audioUri ?? "",
+    weatherCode: row.weatherCode ?? null,
+    temperature: row.temperature ?? null,
   }));
 }
 
@@ -51,6 +55,8 @@ export async function insertEntry(
         imageId: imageRow.id,
         audioId,
         location: data.location,
+        weatherCode: data.weatherCode,
+        temperature: data.temperature,
       })
       .returning();
 
@@ -59,6 +65,8 @@ export async function insertEntry(
       uri: imageRow.uri,
       location: bitacoraRow.location,
       audioKey,
+      weatherCode: bitacoraRow.weatherCode ?? null,
+      temperature: bitacoraRow.temperature ?? null,
     };
   });
 }

@@ -8,6 +8,8 @@ import { ImageSelectionModal } from '../../src/components/ImageSelectionModal';
 import { AudioSelectionModal } from '../../src/components/AudioSelectionModal';
 import { useLocation } from '../../src/hooks/useLocation';
 import { getAudioLabel } from '../../src/utils/audioResolver';
+import { buildBitacoraEntry } from '../../src/utils/buildBitacoraEntry';
+import { WeatherInfo } from '../../src/components/WeatherInfo';
 
 export default function BodegaScreen() {
   const { entries, addEntry } = useBitacora();
@@ -21,12 +23,13 @@ export default function BodegaScreen() {
 
   const handleSaveImage = async (imageUri: string) => {
     const locData = await location.getLocation();
-    addEntry({
-      id: '',
+    const entry = await buildBitacoraEntry({
       uri: imageUri,
-      location: locData ? locData.readableLocation : 'Ubicación desconocida',
+      locationData: locData,
       audioKey: pendingAudioKey ?? '',
     });
+
+    addEntry({ id: '', ...entry });
     setPendingAudioKey(null);
     setPendingAudioLabel(undefined);
   };
@@ -59,6 +62,7 @@ export default function BodegaScreen() {
           >
             <Image source={{ uri: item.uri }} style={styles.image} />
             <Text style={styles.label} numberOfLines={1}>{item.location}</Text>
+            <WeatherInfo entry={item} style={styles.weatherRow} />
           </TouchableOpacity>
         )}
       />
@@ -94,4 +98,5 @@ const styles = StyleSheet.create({
   card: { flex: 1, margin: 5, backgroundColor: '#eee', borderRadius: 8, overflow: 'hidden' },
   image: { height: 150, width: '100%' },
   label: { padding: 5, fontSize: 12, textAlign: 'center' },
+  weatherRow: { paddingHorizontal: 5, paddingBottom: 5, justifyContent: 'center' },
 });
