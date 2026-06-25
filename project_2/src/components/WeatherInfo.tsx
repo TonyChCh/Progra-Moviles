@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getWeatherDescription } from '../constants/weatherCodes';
 import { getWeatherIcon } from '../constants/weatherIcons';
 import { formatTemperature } from '../utils/fetchCurrentWeather';
-import type { BitacoraEntry } from '../contexts/BitacoraContext';
+import type { BitacoraEntry } from '../types/bitacora';
 
 interface WeatherInfoProps {
   entry: Pick<BitacoraEntry, 'weatherCode' | 'temperature'>;
@@ -12,25 +12,18 @@ interface WeatherInfoProps {
   style?: object;
 }
 
-export function WeatherInfo({
-  entry,
-  iconSize = 14,
-  textStyle,
-  style,
-}: WeatherInfoProps) {
-  if (entry.weatherCode == null && entry.temperature == null) {
-    return null;
-  }
+export function WeatherInfo({ entry, iconSize = 14, textStyle, style }: WeatherInfoProps) {
+  if (entry.weatherCode == null && entry.temperature == null) return null;
 
   return (
     <View style={[styles.row, style]}>
       {entry.weatherCode != null ? (
-        <Ionicons name={getWeatherIcon(entry.weatherCode)} size={iconSize} color="#007AFF" />
-      ) : null}
-      {entry.weatherCode != null ? (
-        <Text style={[styles.text, textStyle]} numberOfLines={1}>
-          {getWeatherDescription(entry.weatherCode)}
-        </Text>
+        <>
+          <Ionicons name={getWeatherIcon(entry.weatherCode)} size={iconSize} color="#007AFF" />
+          <Text style={[styles.text, textStyle]} numberOfLines={1}>
+            {getWeatherDescription(entry.weatherCode)}
+          </Text>
+        </>
       ) : null}
       {entry.temperature != null ? (
         <Text style={[styles.text, textStyle]}>{formatTemperature(entry.temperature)}</Text>

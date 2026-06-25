@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Audio, AVPlaybackStatus } from "expo-av";
+import { useEffect, useRef, useState } from 'react';
+import { Audio, AVPlaybackStatus } from 'expo-av';
 import { resolveAudioUri } from '../utils/audioResolver';
 
 export function useAppAudio() {
@@ -7,8 +7,19 @@ export function useAppAudio() {
   const [isLoading, setIsLoading] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
 
+  const stopAudio = async () => {
+    if (!soundRef.current) return;
 
-  // PLAY NEW SOUND
+    try {
+      await soundRef.current.unloadAsync();
+    } catch (error) {
+      console.error('Error al liberar el audio:', error);
+    } finally {
+      soundRef.current = null;
+      setIsPlaying(false);
+    }
+  };
+
   const playNew = async (audioKey: string) => {
     if (isLoading) return;
 
@@ -17,33 +28,26 @@ export function useAppAudio() {
 
     try {
       setIsLoading(true);
-
       await stopAudio();
 
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri },
-        { shouldPlay: true }
-      );
-
-      soundRef.current = newSound;
+      const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true });
+      soundRef.current = sound;
       setIsPlaying(true);
 
-      newSound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
+      sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
         if (status.isLoaded && status.didJustFinish) {
           setIsPlaying(false);
-          stopAudio();
+          void stopAudio();
         }
       });
-
     } catch (error) {
-      console.error("Error en playNew al cargar el archivo:", error);
+      console.error('Error reproduciendo audio:', error);
       setIsPlaying(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // PLAY / PAUSE
   const togglePlayPause = async () => {
     if (!soundRef.current || isLoading) return;
 
@@ -56,29 +60,13 @@ export function useAppAudio() {
         setIsPlaying(true);
       }
     } catch (error) {
-      console.error("Error al pausar/reanudar el audio:", error);
-    }
-  };
-
-  // STOP AND CLEANUP
-  const stopAudio = async () => {
-    if (soundRef.current) {
-      try {
-        await soundRef.current.unloadAsync();
-      } catch (error) {
-        console.error("Error al liberar el hardware de audio:", error);
-      } finally {
-        soundRef.current = null;
-        setIsPlaying(false);
-      }
+      console.error('Error al pausar/reanudar:', error);
     }
   };
 
   useEffect(() => {
     return () => {
-      if (soundRef.current) {
-        soundRef.current.unloadAsync();
-      }
+      void soundRef.current?.unloadAsync();
     };
   }, []);
 
@@ -86,6 +74,6 @@ export function useAppAudio() {
     isPlaying: isPlaying || isLoading,
     playNew,
     togglePlayPause,
-    stopAudio
+    stopAudio,
   };
 }

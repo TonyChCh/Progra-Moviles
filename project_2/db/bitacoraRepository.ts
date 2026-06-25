@@ -1,5 +1,5 @@
 import { desc, eq } from "drizzle-orm";
-import type { BitacoraEntry } from "../src/contexts/BitacoraContext";
+import type { BitacoraEntry, NewBitacoraEntry } from "../src/types/bitacora";
 import { db } from "./client";
 import { audio, bitacora, image } from "./schema";
 
@@ -28,9 +28,7 @@ export async function fetchAllEntries(): Promise<BitacoraEntry[]> {
   }));
 }
 
-export async function insertEntry(
-  data: Omit<BitacoraEntry, "id">
-): Promise<BitacoraEntry> {
+export async function insertEntry(data: NewBitacoraEntry): Promise<BitacoraEntry> {
   return db.transaction(async (tx) => {
     const [imageRow] = await tx
       .insert(image)

@@ -1,25 +1,23 @@
-import type { BitacoraEntry } from '../contexts/BitacoraContext';
+import type { NewBitacoraEntry } from '../types/bitacora';
 import { resolveEntryWeather } from './fetchCurrentWeather';
+import type { LocationResult } from '../types/location';
 
-type LocationData = {
-  readableLocation: string;
-  coords: { latitude: number; longitude: number } | null;
-} | null | undefined;
+interface BuildEntryParams {
+  uri: string;
+  locationData: LocationResult;
+  audioKey: string;
+}
 
 export async function buildBitacoraEntry({
   uri,
   locationData,
   audioKey,
-}: {
-  uri: string;
-  locationData: LocationData;
-  audioKey: string;
-}): Promise<Omit<BitacoraEntry, 'id'>> {
-  const weather = await resolveEntryWeather(locationData?.coords ?? null);
+}: BuildEntryParams): Promise<NewBitacoraEntry> {
+  const weather = await resolveEntryWeather(locationData.coords);
 
   return {
     uri,
-    location: locationData?.readableLocation ?? 'Ubicación desconocida',
+    location: locationData.readableLocation,
     audioKey,
     weatherCode: weather.weatherCode,
     temperature: weather.temperature,

@@ -1,45 +1,30 @@
-import { CameraView } from "expo-camera";
-import { useRef, useState } from "react";
+import { CameraView } from 'expo-camera';
+import { useRef, useState } from 'react';
 
 export function useAppCamera() {
-  const [facing, setFacing] = useState<"back" | "front">("back");
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [facing, setFacing] = useState<'back' | 'front'>('back');
   const cameraRef = useRef<CameraView>(null);
   const isCapturingRef = useRef(false);
 
   const toggleCameraFacing = () => {
     if (isCapturingRef.current) return;
-    setFacing((current) => (current === "back" ? "front" : "back"));
+    setFacing((current) => (current === 'back' ? 'front' : 'back'));
   };
 
-  const takePicture = async () => {
+  const takePicture = async (): Promise<string | null> => {
     if (isCapturingRef.current || !cameraRef.current) return null;
 
     isCapturingRef.current = true;
     try {
       const photo = await cameraRef.current.takePictureAsync();
-
-      if (photo?.uri) {
-        setPhotoUri(photo.uri);
-        return photo.uri;
-      }
+      return photo?.uri ?? null;
     } catch (error) {
-      console.error("Error al capturar la fotografía", error);
+      console.error('Error al capturar la fotografía:', error);
+      return null;
     } finally {
       isCapturingRef.current = false;
     }
-    return null;
   };
 
-  // DELETE CURRENT PHOTO
-  const resetPhoto = () => setPhotoUri(null);
-
-  return {
-    facing,
-    cameraRef,
-    photoUri,
-    toggleCameraFacing,
-    takePicture,
-    resetPhoto
-  };
+  return { facing, cameraRef, toggleCameraFacing, takePicture };
 }

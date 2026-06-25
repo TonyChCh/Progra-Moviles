@@ -1,22 +1,20 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { fetchAllEntries, insertEntry, deleteEntry as deleteEntryFromDb } from '../../db/bitacoraRepository';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  deleteEntry as deleteEntryFromDb,
+  fetchAllEntries,
+  insertEntry,
+} from '../../db/bitacoraRepository';
+import type { BitacoraEntry, NewBitacoraEntry } from '../types/bitacora';
 
-export interface BitacoraEntry {
-  id: string;
-  uri: string;
-  location: string;
-  audioKey: string;
-  weatherCode: number | null;
-  temperature: number | null;
-}
+export type { BitacoraEntry, NewBitacoraEntry };
 
-interface BitacoraContextType {
+interface BitacoraContextValue {
   entries: BitacoraEntry[];
-  addEntry: (entry: BitacoraEntry) => void;
+  addEntry: (entry: NewBitacoraEntry) => void;
   deleteEntry: (id: string) => Promise<void>;
 }
 
-const BitacoraContext = createContext<BitacoraContextType | undefined>(undefined);
+const BitacoraContext = createContext<BitacoraContextValue | undefined>(undefined);
 
 export function BitacoraProvider({ children }: { children: React.ReactNode }) {
   const [entries, setEntries] = useState<BitacoraEntry[]>([]);
@@ -27,14 +25,8 @@ export function BitacoraProvider({ children }: { children: React.ReactNode }) {
       .catch((err) => console.error('Error cargando entradas:', err));
   }, []);
 
-  const addEntry = (entry: BitacoraEntry) => {
-    void insertEntry({
-      uri: entry.uri,
-      location: entry.location,
-      audioKey: entry.audioKey,
-      weatherCode: entry.weatherCode,
-      temperature: entry.temperature,
-    })
+  const addEntry = (entry: NewBitacoraEntry) => {
+    void insertEntry(entry)
       .then((created) => setEntries((prev) => [created, ...prev]))
       .catch((err) => console.error('Error guardando entrada:', err));
   };
@@ -56,8 +48,10 @@ export function BitacoraProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useBitacora = () => {
+export function useBitacora(): BitacoraContextValue {
   const context = useContext(BitacoraContext);
-  if (!context) throw new Error("useBitacora debe usarse dentro de BitacoraProvider");
+  if (!context) {
+    throw new Error('useBitacora debe usarse dentro de BitacoraProvider');
+  }
   return context;
-};
+}

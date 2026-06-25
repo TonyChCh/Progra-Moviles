@@ -1,30 +1,34 @@
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { BitacoraProvider } from '../src/contexts/BitacoraContext';
 import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { BitacoraProvider } from '../src/contexts/BitacoraContext';
 import { initDatabase } from '@/db/init';
 
+function LoadingScreen() {
+  return (
+    <View style={styles.loading}>
+      <Text>Cargando...</Text>
+    </View>
+  );
+}
+
 export default function RootLayout() {
-  const [init, setInit] = useState(false);
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
     try {
       initDatabase();
-      setInit(true);
+      setReady(true);
     } catch (error) {
-      console.error("Error al iniciar", error);
+      console.error('Error al iniciar la base de datos:', error);
     }
   }, []);
 
-  if (!init) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Cargando...</Text>
-      </View>
-    );
-  }
+  if (!ready) return <LoadingScreen />;
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={styles.root}>
       <BitacoraProvider>
         <Stack>
           <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
@@ -37,3 +41,12 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

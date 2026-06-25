@@ -13,11 +13,11 @@ import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useBitacora, BitacoraEntry } from '../../src/contexts/BitacoraContext';
+import { useBitacora } from '../../src/contexts/BitacoraContext';
 import { useAppAudio } from '../../src/hooks/useAudio';
 import { WeatherInfo } from '../../src/components/WeatherInfo';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function DetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,25 +25,20 @@ export default function DetailScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const audio = useAppAudio();
-  const listRef = useRef<FlatList<BitacoraEntry>>(null);
+
   const playNewRef = useRef(audio.playNew);
   const stopAudioRef = useRef(audio.stopAudio);
-
   playNewRef.current = audio.playNew;
   stopAudioRef.current = audio.stopAudio;
 
-  const initialIndex = Math.max(0, entries.findIndex((e) => e.id === id));
+  const initialIndex = Math.max(0, entries.findIndex((entry) => entry.id === id));
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const currentEntry = entries[currentIndex];
-
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: { index: number | null }[] }) => {
       const nextIndex = viewableItems[0]?.index;
-      if (nextIndex != null) {
-        setCurrentIndex(nextIndex);
-      }
+      if (nextIndex != null) setCurrentIndex(nextIndex);
     }
   ).current;
 
@@ -60,29 +55,21 @@ export default function DetailScreen() {
   const handleDelete = useCallback(() => {
     if (!currentEntry) return;
 
-    Alert.alert(
-      'Eliminar foto',
-      '¿Estás seguro de que deseas eliminar esta entrada?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: () => {
-            void stopAudioRef.current();
-            void deleteEntry(currentEntry.id)
-              .then(() => {
-                if (entries.length <= 1) {
-                  router.back();
-                }
-              })
-              .catch(() => {
-                Alert.alert('Error', 'No se pudo eliminar la foto.');
-              });
-          },
+    Alert.alert('Eliminar foto', '¿Estás seguro de que deseas eliminar esta entrada?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Eliminar',
+        style: 'destructive',
+        onPress: () => {
+          void stopAudioRef.current();
+          void deleteEntry(currentEntry.id)
+            .then(() => {
+              if (entries.length <= 1) router.back();
+            })
+            .catch(() => Alert.alert('Error', 'No se pudo eliminar la foto.'));
         },
-      ]
-    );
+      },
+    ]);
   }, [currentEntry, deleteEntry, entries.length, router]);
 
   useLayoutEffect(() => {
@@ -97,9 +84,7 @@ export default function DetailScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (currentEntry?.audioKey) {
-        void playNewRef.current(currentEntry.audioKey);
-      }
+      if (currentEntry?.audioKey) void playNewRef.current(currentEntry.audioKey);
       return () => {
         void stopAudioRef.current();
       };
@@ -107,10 +92,8 @@ export default function DetailScreen() {
   );
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState !== 'active') {
-        void stopAudioRef.current();
-      }
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') void stopAudioRef.current();
     });
     return () => subscription.remove();
   }, []);
@@ -122,7 +105,6 @@ export default function DetailScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        ref={listRef}
         data={entries}
         keyExtractor={(item) => item.id}
         horizontal
@@ -135,7 +117,7 @@ export default function DetailScreen() {
           index,
         })}
         onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
+        viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         renderItem={({ item }) => (
           <View style={styles.page}>
             <Image source={{ uri: item.uri }} style={styles.fullImage} />
@@ -165,8 +147,5 @@ const styles = StyleSheet.create({
   weatherRow: { justifyContent: 'center', marginTop: 8 },
   weatherText: { color: '#ddd', fontSize: 14 },
   notFound: { flex: 1, textAlign: 'center', marginTop: 50, fontSize: 16 },
-  headerButton: {
-    marginHorizontal: 8,
-    padding: 4,
-  },
+  headerButton: { marginHorizontal: 8, padding: 4 },
 });

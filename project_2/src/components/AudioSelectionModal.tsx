@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Modal,
@@ -6,55 +6,17 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
-  Pressable,
 } from 'react-native';
+import { AppButton } from './AppButton';
 import { pickAsset } from '../utils/assetPicker';
 import { SOUND_EFFECTS } from '../constants/data';
 import { getAudioLabel } from '../utils/audioResolver';
-import { useAudioSelectionModal } from '../hooks/useAudioSelectionModal';
+import type { ModalController } from '../hooks/useModal';
 
 interface AudioSelectionModalProps {
-  modal: ReturnType<typeof useAudioSelectionModal>;
+  modal: ModalController;
   onConfirm: (audioKey: string | null) => void;
   onDismiss?: () => void;
-}
-
-interface ModalActionButtonProps {
-  title: string;
-  onPress: () => void;
-  disabled?: boolean;
-  variant?: 'primary' | 'danger' | 'selected';
-}
-
-function ModalActionButton({
-  title,
-  onPress,
-  disabled = false,
-  variant = 'primary',
-}: ModalActionButtonProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        styles.actionButton,
-        variant === 'danger' && styles.actionButtonDanger,
-        variant === 'selected' && styles.actionButtonSelected,
-        disabled && styles.actionButtonDisabled,
-        pressed && !disabled && styles.actionButtonPressed,
-      ]}
-    >
-      <Text
-        style={[
-          styles.actionButtonText,
-          variant === 'danger' && styles.actionButtonTextDanger,
-          disabled && styles.actionButtonTextDisabled,
-        ]}
-      >
-        {title}
-      </Text>
-    </Pressable>
-  );
 }
 
 export function AudioSelectionModal({ modal, onConfirm, onDismiss }: AudioSelectionModalProps) {
@@ -62,19 +24,16 @@ export function AudioSelectionModal({ modal, onConfirm, onDismiss }: AudioSelect
   const [selectedAudioKey, setSelectedAudioKey] = useState<string | null>(null);
 
   useEffect(() => {
-    if (modal.isVisible) {
-      setSelectedAudioKey(null);
-      setLoading(false);
-    }
+    if (!modal.isVisible) return;
+    setSelectedAudioKey(null);
+    setLoading(false);
   }, [modal.isVisible]);
 
-  const handlePickAudioFile = async () => {
+  const pickAudioFile = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const uri = await pickAsset('audio');
-      if (uri) {
-        setSelectedAudioKey(uri);
-      }
+      if (uri) setSelectedAudioKey(uri);
     } catch (error) {
       console.error('Error picking audio:', error);
     } finally {
@@ -82,39 +41,29 @@ export function AudioSelectionModal({ modal, onConfirm, onDismiss }: AudioSelect
     }
   };
 
-  const handleConfirm = () => {
-    onConfirm(selectedAudioKey);
-    modal.close();
-  };
-
-  const handleSkip = () => {
-    onConfirm(null);
-    modal.close();
-  };
-
-  const handleDismiss = () => {
+  const close = () => {
     modal.close();
     onDismiss?.();
   };
 
+  const confirm = (audioKey: string | null) => {
+    onConfirm(audioKey);
+    modal.close();
+  };
+
   return (
-    <Modal
-      visible={modal.isVisible}
-      animationType="slide"
-      transparent
-      onRequestClose={handleDismiss}
-    >
-      <View style={styles.container}>
-        <View style={styles.modalContent}>
-          <Text style={styles.title}>Seleccionar Audio</Text>
+    <Modal visible={modal.isVisible} animationType="slide" transparent onRequestClose={close}>
+      <View style={styles.backdrop}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Seleccionar audio</Text>
           <Text style={styles.subtitle}>Elige un efecto integrado o tu propio archivo</Text>
 
-          {loading && <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />}
+          {loading ? <ActivityIndicator size="large" color="#007AFF" style={styles.loader} /> : null}
 
           <ScrollView style={styles.scrollArea}>
             {Object.entries(SOUND_EFFECTS).map(([key, effect]) => (
-              <View key={key} style={styles.builtinButton}>
-                <ModalActionButton
+              <View key={key} style={styles.builtinRow}>
+                <AppButton
                   title={effect.title}
                   onPress={() => setSelectedAudioKey(key)}
                   variant={selectedAudioKey === key ? 'selected' : 'primary'}
@@ -124,25 +73,22 @@ export function AudioSelectionModal({ modal, onConfirm, onDismiss }: AudioSelect
           </ScrollView>
 
           {selectedAudioKey ? (
-            <Text style={styles.infoLabel}>
-              Seleccionado: {getAudioLabel(selectedAudioKey)}
-            </Text>
+            <Text style={styles.info}>Seleccionado: {getAudioLabel(selectedAudioKey)}</Text>
           ) : null}
 
-          <View style={styles.buttonGroup}>
-            <ModalActionButton
+          <View style={styles.actions}>
+            <AppButton
               title="Seleccionar archivo de audio"
-              onPress={handlePickAudioFile}
+              onPress={pickAudioFile}
               disabled={loading}
             />
-            <ModalActionButton title="Continuar sin audio" onPress={handleSkip} disabled={loading} />
-            <ModalActionButton title="Confirmar" onPress={handleConfirm} disabled={loading} />
-            <ModalActionButton
-              title="Cancelar"
-              onPress={handleDismiss}
+            <AppButton
+              title="Continuar sin audio"
+              onPress={() => confirm(null)}
               disabled={loading}
-              variant="danger"
             />
+            <AppButton title="Confirmar" onPress={() => confirm(selectedAudioKey)} disabled={loading} />
+            <AppButton title="Cancelar" onPress={close} disabled={loading} variant="danger" />
           </View>
         </View>
       </View>
@@ -151,12 +97,12 @@ export function AudioSelectionModal({ modal, onConfirm, onDismiss }: AudioSelect
 }
 
 const styles = StyleSheet.create({
-  container: {
+  backdrop: {
     flex: 1,
     justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
-  modalContent: {
+  content: {
     backgroundColor: 'white',
     margin: 20,
     borderRadius: 12,
@@ -175,53 +121,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
-  loader: {
-    marginVertical: 12,
-  },
-  scrollArea: {
-    maxHeight: 220,
-    marginBottom: 12,
-  },
-  builtinButton: {
-    marginBottom: 8,
-  },
-  infoLabel: {
+  loader: { marginVertical: 12 },
+  scrollArea: { maxHeight: 220, marginBottom: 12 },
+  builtinRow: { marginBottom: 8 },
+  info: {
     fontSize: 14,
     color: '#333',
     marginBottom: 12,
     textAlign: 'center',
   },
-  buttonGroup: {
-    gap: 10,
-  },
-  actionButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  actionButtonSelected: {
-    backgroundColor: '#0051A8',
-  },
-  actionButtonDanger: {
-    backgroundColor: '#FF3B30',
-  },
-  actionButtonDisabled: {
-    backgroundColor: '#C7C7CC',
-  },
-  actionButtonPressed: {
-    opacity: 0.8,
-  },
-  actionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  actionButtonTextDanger: {
-    color: '#FFFFFF',
-  },
-  actionButtonTextDisabled: {
-    color: '#8E8E93',
-  },
+  actions: { gap: 10 },
 });

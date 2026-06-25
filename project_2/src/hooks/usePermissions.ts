@@ -1,53 +1,44 @@
-import { useCameraPermissions } from "expo-camera";
-import { useForegroundPermissions } from "expo-location";
-import { AppState } from "react-native";
-import { useEffect, useCallback } from "react";
+import { useCameraPermissions } from 'expo-camera';
+import { useForegroundPermissions } from 'expo-location';
+import { AppState } from 'react-native';
+import { useCallback, useEffect } from 'react';
 
-type PermissionType = 'camera' | 'location' | 'audio' | 'gallery';
+type PermissionType = 'camera' | 'location';
 
-export function useAppPermissions(requiredPermissions: PermissionType[]) {
-  const [cam, reqCam] = useCameraPermissions();
-  const [loc, reqLoc] = useForegroundPermissions();
+export function useAppPermissions(required: PermissionType[]) {
+  const [camera, requestCamera] = useCameraPermissions();
+  const [location, requestLocation] = useForegroundPermissions();
 
-  const refreshPermissions = useCallback(async () => {
-    await reqCam();
-    await reqLoc();
-  }, [reqCam, reqLoc]);
+  const refresh = useCallback(async () => {
+    await requestCamera();
+    await requestLocation();
+  }, [requestCamera, requestLocation]);
 
-  // Refresh permissions when app comes to foreground
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') refreshPermissions();
+      if (state === 'active') void refresh();
     });
-    return () => subscription.remove?.();
-  }, [refreshPermissions]);
+    return () => subscription.remove();
+  }, [refresh]);
 
-  // Detect permission status changes and trigger refresh
   useEffect(() => {
-    refreshPermissions();
-  }, [cam?.granted, loc?.granted, refreshPermissions]);
+    void refresh();
+  }, [camera?.granted, location?.granted, refresh]);
 
-  const getPermissionStatus = (type: PermissionType) => {
-    switch (type) {
-      case 'camera': return cam;
-      case 'location': return loc;
-      default: return null;
-    }
-  };
+  const statusFor = (type: PermissionType) => (type === 'camera' ? camera : location);
 
-  const isAllGranted = requiredPermissions.every(p => getPermissionStatus(p)?.granted);
-  const canAskAgain = requiredPermissions.every(p => getPermissionStatus(p)?.canAskAgain !== false);
+  const isAllGranted = required.every((type) => statusFor(type)?.granted);
+  const canAskAgain = required.every((type) => statusFor(type)?.canAskAgain !== false);
 
   const requestAll = async () => {
-    let allGranted = true;
-    for (const type of requiredPermissions) {
-      let result;
-      if (type === 'camera') result = await reqCam();
-      if (type === 'location') result = await reqLoc();
+    let granted = true;
 
-      if (!result?.granted) allGranted = false;
+    for (const type of required) {
+      const result = type === 'camera' ? await requestCamera() : await requestLocation();
+      if (!result?.granted) granted = false;
     }
-    return allGranted;
+
+    return granted;
   };
 
   return { isAllGranted, canAskAgain, requestAll };

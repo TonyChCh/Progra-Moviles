@@ -1,66 +1,65 @@
-import { 
-    LocationObject, 
-    getCurrentPositionAsync,
-    LocationAccuracy,
-    reverseGeocodeAsync, 
-    getLastKnownPositionAsync
-} from "expo-location";
-import { useState } from "react";
+import {
+  getCurrentPositionAsync,
+  getLastKnownPositionAsync,
+  LocationAccuracy,
+  reverseGeocodeAsync,
+} from 'expo-location';
+import { useState } from 'react';
+import type { LocationResult } from '../types/location';
 
-interface AppLocationResult {
-  coords: any;
-  timestamp: number | null;
-  readableLocation: string;
+const UNKNOWN_LOCATION = 'Ubicación desconocida';
+
+function buildReadableLocation(place: {
+  city?: string | null;
+  district?: string | null;
+  subregion?: string | null;
+  country?: string | null;
+}): string {
+  const locality = place.city || place.district || place.subregion || 'Ubicación';
+  return place.country ? `${locality}, ${place.country}` : locality;
 }
 
-export function useLocation () {
-  const [lastLocation, setLastLocation] = useState<LocationObject | null>(null);
+export function useLocation() {
   const [isLoading, setIsLoading] = useState(false);
 
-  const getLocation = async () => {
-    let locationInfo: AppLocationResult = {
+  const getLocation = async (): Promise<LocationResult> => {
+    const fallback: LocationResult = {
       coords: null,
       timestamp: null,
-      readableLocation: "Ubicación desconocida",
+      readableLocation: UNKNOWN_LOCATION,
     };
-    
+
     try {
       setIsLoading(true);
 
-      let currentLocation = await getLastKnownPositionAsync({});
-
-      if (!currentLocation) {
-        currentLocation = await getCurrentPositionAsync({
-          accuracy: LocationAccuracy.Balanced,
-        });
+      let position = await getLastKnownPositionAsync({});
+      if (!position) {
+        position = await getCurrentPositionAsync({ accuracy: LocationAccuracy.Balanced });
       }
-      setLastLocation(currentLocation);
 
-      locationInfo.coords = currentLocation.coords;
-      locationInfo.timestamp = currentLocation.timestamp;
+      const result: LocationResult = {
+        coords: position.coords,
+        timestamp: position.timestamp,
+        readableLocation: UNKNOWN_LOCATION,
+      };
 
-      const response = await reverseGeocodeAsync({
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude
+      const places = await reverseGeocodeAsync({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
       });
-    
-      if (response && response.length > 0) {
-        const place = response[0];
-        const localidad = place.city || place.district || place.subregion || "Ubicación";
-        
-        locationInfo.readableLocation = place.country ? `${localidad}, ${place.country}` : localidad;
+
+      if (places.length > 0) {
+        result.readableLocation = buildReadableLocation(places[0]);
       }
+
+      return result;
     } catch (error) {
-      console.log("Hubo un fallo en el proceso de ubicación:", error);
+      console.error('Error obteniendo ubicación:', error);
+      return fallback;
     } finally {
       setIsLoading(false);
     }
-    return locationInfo;
   };
 
-  return {
-    lastLocation,
-    isLoading,
-    getLocation
-  };
-};
+  return { isLoading, getLocation };
+}

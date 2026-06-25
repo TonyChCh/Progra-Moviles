@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Modal,
@@ -6,54 +6,17 @@ import {
   Image,
   StyleSheet,
   ActivityIndicator,
-  Pressable,
 } from 'react-native';
+import { AppButton } from './AppButton';
 import { pickAsset } from '../utils/assetPicker';
-import { useImageSelectionModal } from '../hooks/useImageSelectionModal';
+import type { ModalController } from '../hooks/useModal';
 
 interface ImageSelectionModalProps {
-  modal: ReturnType<typeof useImageSelectionModal>;
+  modal: ModalController;
   onSave: (imageUri: string) => void;
   onRequestAudio: () => void;
   onDismiss?: () => void;
   selectedAudioLabel?: string;
-}
-
-interface ModalActionButtonProps {
-  title: string;
-  onPress: () => void;
-  disabled?: boolean;
-  variant?: 'primary' | 'danger';
-}
-
-function ModalActionButton({
-  title,
-  onPress,
-  disabled = false,
-  variant = 'primary',
-}: ModalActionButtonProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        styles.actionButton,
-        variant === 'danger' && styles.actionButtonDanger,
-        disabled && styles.actionButtonDisabled,
-        pressed && !disabled && styles.actionButtonPressed,
-      ]}
-    >
-      <Text
-        style={[
-          styles.actionButtonText,
-          variant === 'danger' && styles.actionButtonTextDanger,
-          disabled && styles.actionButtonTextDisabled,
-        ]}
-      >
-        {title}
-      </Text>
-    </Pressable>
-  );
 }
 
 export function ImageSelectionModal({
@@ -67,21 +30,18 @@ export function ImageSelectionModal({
   const [imageUri, setImageUri] = useState<string | null>(null);
 
   useEffect(() => {
-    if (modal.isVisible) {
-      setImageUri(null);
-      setLoading(false);
-    }
+    if (!modal.isVisible) return;
+    setImageUri(null);
+    setLoading(false);
   }, [modal.isVisible]);
 
   const hasImage = imageUri !== null;
 
-  const handlePickImage = async () => {
+  const pickImage = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const uri = await pickAsset('image');
-      if (uri) {
-        setImageUri(uri);
-      }
+      if (uri) setImageUri(uri);
     } catch (error) {
       console.error('Error picking image:', error);
     } finally {
@@ -89,59 +49,45 @@ export function ImageSelectionModal({
     }
   };
 
-  const handleSave = () => {
+  const close = () => {
+    modal.close();
+    onDismiss?.();
+  };
+
+  const save = () => {
     if (!imageUri) return;
     onSave(imageUri);
     modal.close();
   };
 
-  const handleDismiss = () => {
-    modal.close();
-    onDismiss?.();
-  };
-
   return (
-    <Modal
-      visible={modal.isVisible}
-      animationType="slide"
-      transparent
-      onRequestClose={handleDismiss}
-    >
-      <View style={styles.container}>
-        <View style={styles.modalContent}>
-          <Text style={styles.title}>Seleccionar Imagen</Text>
+    <Modal visible={modal.isVisible} animationType="slide" transparent onRequestClose={close}>
+      <View style={styles.backdrop}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Seleccionar imagen</Text>
           <Text style={styles.subtitle}>
             {loading ? 'Cargando imagen...' : 'Presiona para seleccionar una imagen'}
           </Text>
-          {loading && <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />}
-          {hasImage && (
-            <Image source={{ uri: imageUri }} style={styles.previewImage} />
-          )}
+
+          {loading ? <ActivityIndicator size="large" color="#007AFF" style={styles.loader} /> : null}
+          {hasImage ? <Image source={{ uri: imageUri }} style={styles.preview} /> : null}
           {selectedAudioLabel ? (
-            <Text style={styles.infoLabel}>Audio: {selectedAudioLabel}</Text>
+            <Text style={styles.info}>Audio: {selectedAudioLabel}</Text>
           ) : null}
-          <View style={styles.buttonGroup}>
-            <ModalActionButton
-              title={hasImage ? 'Cambiar Imagen' : 'Seleccionar Imagen'}
-              onPress={handlePickImage}
+
+          <View style={styles.actions}>
+            <AppButton
+              title={hasImage ? 'Cambiar imagen' : 'Seleccionar imagen'}
+              onPress={pickImage}
               disabled={loading}
             />
-            <ModalActionButton
+            <AppButton
               title="Seleccionar audio"
               onPress={onRequestAudio}
               disabled={loading || !hasImage}
             />
-            <ModalActionButton
-              title="Guardar"
-              onPress={handleSave}
-              disabled={loading || !hasImage}
-            />
-            <ModalActionButton
-              title="Cancelar"
-              onPress={handleDismiss}
-              disabled={loading}
-              variant="danger"
-            />
+            <AppButton title="Guardar" onPress={save} disabled={loading || !hasImage} />
+            <AppButton title="Cancelar" onPress={close} disabled={loading} variant="danger" />
           </View>
         </View>
       </View>
@@ -150,12 +96,12 @@ export function ImageSelectionModal({
 }
 
 const styles = StyleSheet.create({
-  container: {
+  backdrop: {
     flex: 1,
     justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
-  modalContent: {
+  content: {
     backgroundColor: 'white',
     margin: 20,
     borderRadius: 12,
@@ -175,49 +121,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  loader: {
-    marginVertical: 20,
-  },
-  previewImage: {
+  loader: { marginVertical: 20 },
+  preview: {
     width: '100%',
     height: 250,
     borderRadius: 8,
     marginBottom: 20,
   },
-  infoLabel: {
+  info: {
     fontSize: 14,
     color: '#333',
     marginBottom: 12,
     textAlign: 'center',
   },
-  buttonGroup: {
-    gap: 10,
-  },
-  actionButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  actionButtonDanger: {
-    backgroundColor: '#FF3B30',
-  },
-  actionButtonDisabled: {
-    backgroundColor: '#C7C7CC',
-  },
-  actionButtonPressed: {
-    opacity: 0.8,
-  },
-  actionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  actionButtonTextDanger: {
-    color: '#FFFFFF',
-  },
-  actionButtonTextDisabled: {
-    color: '#8E8E93',
-  },
+  actions: { gap: 10 },
 });
